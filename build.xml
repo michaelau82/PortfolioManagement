@@ -23,7 +23,18 @@
 
 	<target name="compile" depends="init" description="compile the source ">
 		<!-- Compile the java code from ${src.dir} into ${build.dir} -->
-		<javac includeantruntime="false" srcdir="${src.dir}" destdir="${build.dir}" />
+		<javac includeantruntime="false" srcdir="${src.dir}" destdir="${build.dir}">
+			<classpath>
+		        <pathelement path="lib/h2-1.4.194.jar"/>
+				<pathelement path="lib/junit-4.12.jar"/>
+				<pathelement path="lib/slf4j-api-1.7.25.jar"/>
+				<pathelement path="lib/commons-lang3-3.5.jar"/>
+				<pathelement path="lib/spring-beans-4.3.7.RELEASE.jar"/>
+				<pathelement path="lib/spring-core-4.3.7.RELEASE.jar"/>
+				<pathelement path="lib/spring-tx-4.3.7.RELEASE.jar"/>
+				<pathelement path="lib/spring-jdbc-4.3.7.RELEASE.jar"/>
+		    </classpath>
+		</javac>
 	</target>
 
 	<target name="dist" depends="compile" description="package, output to JAR">
