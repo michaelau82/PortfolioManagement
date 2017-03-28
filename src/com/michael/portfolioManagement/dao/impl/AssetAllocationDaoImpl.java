@@ -14,6 +14,7 @@ import org.springframework.jdbc.core.support.JdbcDaoSupport;
 
 import com.michael.portfolioManagement.dao.AssetAllocationDao;
 import com.michael.portfolioManagement.domain.AssetAllocation;
+import com.michael.portfolioManagement.domain.PositionType;
 import com.michael.portfolioManagement.domain.Securities;
 
 public class AssetAllocationDaoImpl extends JdbcDaoSupport implements AssetAllocationDao {
@@ -21,7 +22,7 @@ public class AssetAllocationDaoImpl extends JdbcDaoSupport implements AssetAlloc
 	private final static String QUERY_PORTFOLIO_ALLOCATION = 
 			"SELECT FUND_ACCOUNT_ID, ASSET_WEIGHT, SECURITIES_ID, QUANTITIES FROM ASSET_ALLOCATION WHERE FUND_ACCOUNT_ID = ?";
 	private final static String QUERY_SECURITIES = 
-			"SELECT SECURITIES_ID, EXPECTED_RETURN, ANNUAL_STANDARD_DEVIVATION, STOCK_PRICE, SECURITIES_TYPE FROM SECURITIES WHERE SECURITIES_ID = ?";
+			"SELECT SECURITIES_ID, EXPECTED_RETURN, ANNUAL_STANDARD_DEVIVATION, STOCK_PRICE, SECURITIES_TYPE, POSITION_TYPE FROM SECURITIES WHERE SECURITIES_ID = ?";
 	private final static String QUERY_FUND_ACCT_OS_SHARES = "SELECT OS_SHARES FROM FUND WHERE FUND_ACCOUNT_ID = ?";
 	
 	/* (non-Javadoc)
@@ -89,11 +90,13 @@ public class AssetAllocationDaoImpl extends JdbcDaoSupport implements AssetAlloc
 			final Double annualizedStandardDeviation = (Double)result.get("ANNUAL_STANDARD_DEVIVATION");
 			final Double stockPrice = (Double)result.get("STOCK_PRICE");
 			final String securitiesType = (String)result.get("SECURITIES_TYPE");
+			final String positionType = (String)result.get("POSITION_TYPE");
 			securities.setSecuritiesID(retSecuritiesID);
 			securities.setExpectedReturn(expectedReturn);
 			securities.setAnnualizedStandardDeviation(annualizedStandardDeviation);
 			securities.setStockPrice(stockPrice);
 			securities.setSecuritiesType(securitiesType);
+			securities.setPositionType(PositionType.fromString(positionType));
 		}
 		
 		logger.debug("AssetAllocationDaoImpl.getSecurities ends");

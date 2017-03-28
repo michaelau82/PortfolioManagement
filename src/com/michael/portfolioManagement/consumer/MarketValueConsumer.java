@@ -1,5 +1,6 @@
 package com.michael.portfolioManagement.consumer;
 
+import java.math.BigDecimal;
 import java.sql.Time;
 import java.util.concurrent.BlockingQueue;
 import java.util.function.Consumer;

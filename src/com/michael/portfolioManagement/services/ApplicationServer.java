@@ -1,6 +1,5 @@
 package com.michael.portfolioManagement.services;
 
-import java.io.File;
 import java.sql.SQLException;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -10,6 +9,7 @@ import org.h2.store.fs.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessException;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import com.michael.portfolioManagement.consumer.MarketValueConsumer;
 import com.michael.portfolioManagement.domain.Securities;
@@ -21,27 +21,27 @@ public class ApplicationServer {
 	private final BlockingQueue<Securities> queue = new ArrayBlockingQueue<Securities>(queueDepth);
 	private final DatabaseConnectionServices databaseConnectionServices = new DatabaseConnectionServices();
 	private PricingServices pricingServices = new PricingServices();
+	private PrintServices printServices = new PrintServices();
 	
 	public ApplicationServer(){
+		printServices.setPricingServices(pricingServices);
 	}
 	
 	public void start(){
 		try {
-			dbCleanup();
 			databaseConnectionServices.connectH2DB();
 			databaseConnectionServices.dataSetup();
-			pricingServices.getAssetAllocationDaoImpl().setJdbcTemplate(databaseConnectionServices.getJdbcTemplate());
+			JdbcTemplate jdbcTemplate = databaseConnectionServices.getJdbcTemplate();
+			pricingServices.getAssetAllocationDaoImpl().setJdbcTemplate(jdbcTemplate);
+			pricingServices.getOptionDaoImpl().setJdbcTemplate(jdbcTemplate);
 			startMarketValueProducer();
 			startMarketValueConsumer();
+			startPrinter();
 		} catch (SQLException | DatabaseUnitException e) {
 			logger.error("ApplicationServer connect db Exception e: {}", e.getMessage());
 		} catch (DataAccessException dae) {
 			logger.error("ApplicationServer data setup Exception dae: {}", dae.getMessage());
 		}
-	}
-	
-	private void dbCleanup() {
-		FileUtils.deleteRecursive("db", false);
 	}
 	
 	/**
@@ -64,13 +64,15 @@ public class ApplicationServer {
 		logger.debug("Market Data Consumer starts.");
 	}
 	
-	protected void finalize() throws Throwable {
-	     try {
-	    	 databaseConnectionServices.closeConnection();
-	     } finally {
-	         super.finalize();
-	     }
-	 }
+	/**
+	 * Report Printer
+	 */
+	private void startPrinter(){
+		final ReporterPrinter reporterPrinter = new ReporterPrinter();
+		reporterPrinter.setPrintServices(printServices);
+		reporterPrinter.start();
+		logger.debug("Report Printer starts.");
+	}
 	
 
 	public static void main(String[] args) {

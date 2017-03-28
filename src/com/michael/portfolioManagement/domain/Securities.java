@@ -1,7 +1,5 @@
 package com.michael.portfolioManagement.domain;
 
-import org.apache.commons.math3.analysis.function.Sqrt;
-import org.apache.commons.math3.distribution.NormalDistribution;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,6 +12,7 @@ public class Securities {
 	private Double annualizedStandardDeviation = -1D;
 	private Double stockPrice = 0D;
 	private String securitiesType;
+	private PositionType positionType; 
 	
 	/**
 	 * @return the securitiesID
@@ -86,5 +85,19 @@ public class Securities {
 	 */
 	public void setSecuritiesType(String securitiesType) {
 		this.securitiesType = securitiesType;
+	}
+	
+	/**
+	 * @return the positionType
+	 */
+	public PositionType getPositionType() {
+		return positionType;
+	}
+
+	/**
+	 * @param positionType the positionType to set
+	 */
+	public void setPositionType(PositionType positionType) {
+		this.positionType = positionType;
 	}
 }

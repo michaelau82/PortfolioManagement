@@ -2,6 +2,7 @@ package com.michael.portfolioManagement.services;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -25,6 +26,11 @@ import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 import com.michael.portfolioManagement.domain.AssetAllocation;
 import com.michael.portfolioManagement.domain.Fund;
+import com.michael.portfolioManagement.domain.Moneyness;
+import com.michael.portfolioManagement.domain.Option;
+import com.michael.portfolioManagement.domain.OptionStyle;
+import com.michael.portfolioManagement.domain.OptionType;
+import com.michael.portfolioManagement.domain.PositionType;
 import com.michael.portfolioManagement.domain.Securities;
 
 public class DatabaseConnectionServices {
@@ -45,7 +51,20 @@ public class DatabaseConnectionServices {
 		+ "ANNUAL_STANDARD_DEVIVATION DOUBLE DEFAULT 0.0 NOT NULL, "
 		+ "STOCK_PRICE DOUBLE DEFAULT 0.0 NOT NULL, "
 		+ "SECURITIES_TYPE VARCHAR(20) NOT NULL, "
+		+ "POSITION_TYPE VARCHAR(1) NOT NULL, "
 		+ "CONSTRAINT PK_SECURITIES PRIMARY KEY(SECURITIES_ID) ) ";
+	
+	private final static String CREATE_TABLE_OPTION = 
+		"CREATE TABLE OPTION ( "
+		+ "SECURITIES_ID VARCHAR(100) NOT NULL, "
+		+ "OPTION_PRICE DOUBLE DEFAULT 0.0 NOT NULL, "
+		+ "STRIKE_PRICE DOUBLE DEFAULT 0.0 NOT NULL, "
+		+ "EXPIRATION_DATE DATE NOT NULL, "
+		+ "MONEYNESS VARCHAR(1) NOT NULL, "
+		+ "OPTION_TYPE VARCHAR(1) NOT NULL, "
+		+ "OPTION_STYLE VARCHAR(1) NOT NULL, "
+		+ "CONSTRAINT PK_OPTION PRIMARY KEY(SECURITIES_ID), "
+		+ "FOREIGN KEY(SECURITIES_ID) REFERENCES SECURITIES(SECURITIES_ID) ) ";
 	
 	private final static String CREATE_TABLE_ASSET_ALLOCATION = 
 		"CREATE TABLE ASSET_ALLOCATION ( "
@@ -57,22 +76,26 @@ public class DatabaseConnectionServices {
 		+ "FOREIGN KEY(FUND_ACCOUNT_ID) REFERENCES FUND(FUND_ACCOUNT_ID) ) ";
 	
 	private final static String CREATE_TABLE_FUND = 
-			"CREATE TABLE FUND ( "
-			+ "FUND_ACCOUNT_ID VARCHAR(100) NOT NULL, "
-			+ "OS_SHARES BIGINT NOT NULL, "
-			+ "CONSTRAINT PK_FUND PRIMARY KEY(FUND_ACCOUNT_ID) ) ";
+		"CREATE TABLE FUND ( "
+		+ "FUND_ACCOUNT_ID VARCHAR(100) NOT NULL, "
+		+ "OS_SHARES BIGINT NOT NULL, "
+		+ "CONSTRAINT PK_FUND PRIMARY KEY(FUND_ACCOUNT_ID) ) ";
 	
 	private final static String INSERT_SECURITIES = 
-		"INSERT INTO SECURITIES (SECURITIES_ID, EXPECTED_RETURN, ANNUAL_STANDARD_DEVIVATION, STOCK_PRICE, SECURITIES_TYPE) "
-		+ "VALUES(?, ?, ?, ?, ?)";
+		"INSERT INTO SECURITIES (SECURITIES_ID, EXPECTED_RETURN, ANNUAL_STANDARD_DEVIVATION, STOCK_PRICE, SECURITIES_TYPE, POSITION_TYPE) "
+		+ "VALUES(?, ?, ?, ?, ?, ?)";
+	
+	private final static String INSERT_OPTION = 
+		"INSERT INTO OPTION (SECURITIES_ID, OPTION_PRICE, STRIKE_PRICE, EXPIRATION_DATE, MONEYNESS, OPTION_TYPE, OPTION_STYLE) "
+		+ "VALUES(?, ?, ?, ?, ?, ?, ?)";
 	
 	private final static String INSERT_ASSET_ALLOCATION = 
-			"INSERT INTO ASSET_ALLOCATION (FUND_ACCOUNT_ID, ASSET_WEIGHT, SECURITIES_ID, QUANTITIES) "
-			+ "VALUES(?, ?, ?, ?)";
+		"INSERT INTO ASSET_ALLOCATION (FUND_ACCOUNT_ID, ASSET_WEIGHT, SECURITIES_ID, QUANTITIES) "
+		+ "VALUES(?, ?, ?, ?)";
 	
 	private final static String INSERT_FUND = 
-			"INSERT INTO FUND (FUND_ACCOUNT_ID, OS_SHARES) "
-			+ "VALUES(?, ?)";
+		"INSERT INTO FUND (FUND_ACCOUNT_ID, OS_SHARES) "
+		+ "VALUES(?, ?)";
 	
 	
 	public void connectH2DB() throws SQLException, DatabaseUnitException {
@@ -109,6 +132,11 @@ public class DatabaseConnectionServices {
 		// SECURITIES
 		String tableName = "SECURITIES";
 		String sql = CREATE_TABLE_SECURITIES;
+		sqlMap.put(tableName, sql);
+		
+		// OPTION
+		tableName = "OPTION";
+		sql = CREATE_TABLE_OPTION;
 		sqlMap.put(tableName, sql);
 		
 		// ASSET ALLOCATION / PORTFOLIO
@@ -170,6 +198,7 @@ public class DatabaseConnectionServices {
 		securities1.setAnnualizedStandardDeviation(0.02);
 		securities1.setStockPrice(5.1);
 		securities1.setSecuritiesType("STOCK");
+		securities1.setPositionType(PositionType.LONG);
 		securitiesList.add(securities1);
 		
 		Securities securities2 = new Securities();
@@ -178,6 +207,7 @@ public class DatabaseConnectionServices {
 		securities2.setAnnualizedStandardDeviation(0.2);
 		securities2.setStockPrice(1.2);
 		securities2.setSecuritiesType("CALL_OPTION");
+		securities2.setPositionType(PositionType.LONG);
 		securitiesList.add(securities2);
 		
 		Securities securities3 = new Securities();
@@ -186,7 +216,31 @@ public class DatabaseConnectionServices {
 		securities3.setAnnualizedStandardDeviation(0.4);
 		securities3.setStockPrice(1.5);
 		securities3.setSecuritiesType("PUT_OPTION");
+		securities3.setPositionType(PositionType.SHORT);
 		securitiesList.add(securities3);
+		
+		List<Option> optionList = new ArrayList<Option>();
+		Option callOption = new Option();
+		callOption.setSecuritiesID("EUROPEAN_CALL_OPTION_1");
+		callOption.setPrice(1.2);
+		callOption.setStrikePrice(1.3);
+		Date expirationDate1 = Date.valueOf("2017-07-01");
+		callOption.setExpirationDate(expirationDate1);
+		callOption.setMoneyness(Moneyness.AT_THE_MONEY);
+		callOption.setOptionStyle(OptionStyle.EUROPEAN_STYLE);
+		callOption.setOptionType(OptionType.CALL);
+		optionList.add(callOption);
+		
+		Option putOption = new Option();
+		putOption.setSecuritiesID("EUROPEAN_PUT_OPTION_1");
+		putOption.setPrice(1.2);
+		putOption.setStrikePrice(1.1);
+		Date expirationDate2 = Date.valueOf("2017-07-02");
+		putOption.setExpirationDate(expirationDate2);
+		putOption.setMoneyness(Moneyness.AT_THE_MONEY);
+		putOption.setOptionStyle(OptionStyle.EUROPEAN_STYLE);
+		putOption.setOptionType(OptionType.PUT);
+		optionList.add(putOption);
 		
 		List<AssetAllocation> assetAllocationList = new ArrayList<AssetAllocation>();
 		AssetAllocation assetAllocation1 = new AssetAllocation();
@@ -243,6 +297,7 @@ public class DatabaseConnectionServices {
 				ps.setDouble(3, securities.getAnnualizedStandardDeviation());
 				ps.setDouble(4, securities.getStockPrice());
 				ps.setString(5, securities.getSecuritiesType());
+				ps.setString(6, securities.getPositionType().getType());
 			}
 			
 			@Override
@@ -256,6 +311,34 @@ public class DatabaseConnectionServices {
 			logger.debug("{} rows inserted in SECURITIES.", rowsInserted);
 		}catch (DataAccessException dae){
 			logger.error("Insert securities DataAccessException dae: {}", dae.getMessage());
+			throw dae;
+		}
+		
+		// Batch insert OPTION
+		setter = new BatchPreparedStatementSetter() {
+			@Override
+			public void setValues(PreparedStatement ps, int i) throws SQLException {
+				Option option = optionList.get(i);
+				ps.setString(1, option.getSecuritiesID());
+				ps.setDouble(2, option.getPrice());
+				ps.setDouble(3, option.getStrikePrice());
+				ps.setDate(4, option.getExpirationDate());
+				ps.setString(5, option.getMoneyness().getMoneyness());
+				ps.setString(6, option.getOptionType().getType());
+				ps.setString(7, option.getOptionStyle().getStyle());
+			}
+
+			@Override
+			public int getBatchSize() {
+				return optionList.size();
+			}
+		};
+
+		try {
+			final int[] rowsInserted = jdbcTemplate.batchUpdate(INSERT_OPTION, setter);
+			logger.debug("{} rows inserted in OPTION.", rowsInserted);
+		} catch (DataAccessException dae) {
+			logger.error("Insert option DataAccessException dae: {}", dae.getMessage());
 			throw dae;
 		}
 		

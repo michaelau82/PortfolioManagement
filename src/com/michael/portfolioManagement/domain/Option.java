@@ -1,12 +1,15 @@
 package com.michael.portfolioManagement.domain;
 
-import java.util.Date;
+import java.sql.Date;
 
 public class Option extends Securities {
 	private Double price;
 	private Double StrikePrice;
 	private Date expirationDate;
 	private Moneyness moneyness;
+	private OptionType optionType;
+	private OptionStyle optionStyle;
+	
 	/**
 	 * @return the price
 	 */
@@ -54,5 +57,30 @@ public class Option extends Securities {
 	 */
 	public void setMoneyness(Moneyness moneyness) {
 		this.moneyness = moneyness;
+	}
+	
+	/**
+	 * @return the optionType
+	 */
+	public OptionType getOptionType() {
+		return optionType;
+	}
+	/**
+	 * @param optionType the optionType to set
+	 */
+	public void setOptionType(OptionType optionType) {
+		this.optionType = optionType;
+	}
+	/**
+	 * @return the optionStyle
+	 */
+	public OptionStyle getOptionStyle() {
+		return optionStyle;
+	}
+	/**
+	 * @param optionStyle the optionStyle to set
+	 */
+	public void setOptionStyle(OptionStyle optionStyle) {
+		this.optionStyle = optionStyle;
 	}
 }
